@@ -65,3 +65,70 @@ public class Main {
         }
     }
 }
+import java.util.ArrayList;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        String str = "abcdefab";
+        lz77(str);
+    }
+
+    static void lz77(String str) {
+        List<Tuple> tupleList = new ArrayList<>();
+
+        int searchBufferIndex = 0;
+        int lookAheadBufferIndex = 0;
+        int windowSize = 5; // Adjust window size as needed
+
+        while (lookAheadBufferIndex < str.length()) {
+            int offset = 0;
+            int length = 0;
+            String match = null;
+
+            for (int i = Math.max(0, lookAheadBufferIndex - windowSize); i < lookAheadBufferIndex; i++) {
+                int j = lookAheadBufferIndex;
+                int currentLength = 0;
+                while (j < str.length() && str.charAt(i) == str.charAt(j) && currentLength < j - lookAheadBufferIndex) {
+                    currentLength++;
+                    j++;
+                }
+                if (currentLength > length) {
+                    length = currentLength;
+                    offset = lookAheadBufferIndex - i;
+                    match = str.substring(lookAheadBufferIndex, lookAheadBufferIndex + length);
+                }
+            }
+
+            if (offset == 0) {
+                tupleList.add(new Tuple(0, 0, str.charAt(lookAheadBufferIndex)));
+                lookAheadBufferIndex++;
+            } else {
+                tupleList.add(new Tuple(offset, length, match.charAt(0)));
+                lookAheadBufferIndex += length;
+            }
+        }
+
+        // Print the tuples
+        for (Tuple tuple : tupleList) {
+            System.out.println(tuple);
+        }
+    }
+
+    static class Tuple {
+        int offset;
+        int length;
+        char nextChar;
+
+        public Tuple(int offset, int length, char nextChar) {
+            this.offset = offset;
+            this.length = length;
+            this.nextChar = nextChar;
+        }
+
+        @Override
+        public String toString() {
+            return "(" + offset + ", " + length + ", " + nextChar + ")";
+        }
+    }
+}
