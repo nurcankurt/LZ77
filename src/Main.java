@@ -2,70 +2,74 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) {
-        String str = "abcbbcbaaaaaa";
-		char[] chars = str.toCharArray();
-        lz77(chars);
-       
-    }
-    static void lz77(char[] chars) {
-        List<Tuple> tupleList = new ArrayList<Tuple>();
     
-        int searchBufferIndex = 0;
-        int lookAheadBufferIndex = 1;
+    private static final int SEARCH_BUFFER_SIZE = 15;
+    private static final int LOOKAHEAD_BUFFER_SIZE = 10;
     
-        while (lookAheadBufferIndex < chars.length) {
-            int offset = 0;
-            int length = 0;
-            String match = null;
-            char codeword = ' ';
-    
-            for (int i = searchBufferIndex; i >= 0; i--) {
-                int j = lookAheadBufferIndex;
-                while (j < chars.length && chars[i] == chars[j] && length < j - i) {
-                    length++;
-                    match = new String(chars, i, length);
-                    offset = j - i;
-                    j++;
-                    i++;
-                    codeword = chars[j];
-                }
-                if (length == j - i) {
-                    offset = searchBufferIndex - i;
+    public static List<Tuple> compress(String input) {
+        List<Tuple> tuples = new ArrayList<>();
+        
+        int currentIndex = 0;
+        while (currentIndex < input.length()) {
+            int matchLength = 0;
+            int matchPosition = 0;
+            
+            for (int i = currentIndex - 1; i >= Math.max(0, currentIndex - SEARCH_BUFFER_SIZE); i--) {
+                int len = longestMatch(input, i, currentIndex);
+                
+                if (len > matchLength) {
+                    matchLength = len;
+                    matchPosition = currentIndex - i;
                 }
             }
-    
-            if (offset == 0) {
-                tupleList.add(new Tuple(0, 0, chars[lookAheadBufferIndex]));
-                searchBufferIndex++;
-                lookAheadBufferIndex++;
+            
+            if (matchLength > 0) {
+                tuples.add(new Tuple(matchPosition, matchLength, input.charAt(currentIndex + matchLength)));
+                currentIndex += matchLength + 1;
             } else {
-                tupleList.add(new Tuple(offset, length, codeword));
-                searchBufferIndex += length;
-                lookAheadBufferIndex += length;
+                tuples.add(new Tuple(0, 0, input.charAt(currentIndex)));
+                currentIndex++;
             }
         }
-    
-        // Print the tuples
-        for (Tuple tuple : tupleList) {
-            System.out.println(tuple);
-        }
+        
+        return tuples;
     }
     
-    static class Tuple {
-        int offset;
-        int length;
-        char nextSymbol;
-    
-        public Tuple(int offset, int length, char nextSymbol) {
-            this.offset = offset;
-            this.length = length;
-            this.nextSymbol = nextSymbol;
+    private static int longestMatch(String input, int start1, int start2) {
+        int len = 0;
+        
+        while (start2 + len < input.length() && input.charAt(start1 + len) == input.charAt(start2 + len) && len < LOOKAHEAD_BUFFER_SIZE) {
+            len++;
         }
-    
-        @Override
-        public String toString() {
-            return "(" + offset + ", " + length + ", " + nextSymbol + ")";
-        }
+        
+        return len;
     }
-} 
+    
+    public static String decompress(List<Tuple> tuples) {
+        StringBuilder result = new StringBuilder();
+        
+        for (Tuple tuple : tuples) {
+            if (tuple.getOffset() == 0 && tuple.getLength() == 0) {
+                result.append(tuple.getCharacter());
+            } else {
+                int startIndex = result.length() - tuple.getOffset();
+                for (int i = 0; i < tuple.getLength(); i++) {
+                    result.append(result.charAt(startIndex + i));
+                }
+                result.append(tuple.getCharacter());
+            }
+        }
+        
+        return result.toString();
+    }
+    
+
+    public static void main(String[] args) {
+        String input = "CABRACADABRAR";
+        List<Tuple> compressedTuples = compress(input);
+        System.out.println("Compressed Tuples: " + compressedTuples);
+        
+        String decompressedString = decompress(compressedTuples);
+        System.out.println("Decompressed String: " + decompressedString);
+    }
+}
