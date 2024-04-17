@@ -1,7 +1,7 @@
 import java.util.ArrayList;
 import java.util.List;
 
-public class Main {
+public class LZ77 {
     
     private static final int SEARCH_BUFFER_SIZE = 15;
     private static final int LOOKAHEAD_BUFFER_SIZE = 10;
